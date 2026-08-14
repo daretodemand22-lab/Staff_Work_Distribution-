@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Work Manager — Release 1.0</title>
+<meta name="application-name" content="Staff Work Manager">
+<meta name="theme-color" content="#1565c0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,"Noto Sans Bengali",sans-serif;background:#f4f6f9;color:#222}
+.header{background:#1f4e78;color:#fff;padding:17px;display:flex;align-items:center;gap:15px}
+.menu{font-size:28px}.header-title{font-size:21px;font-weight:bold}
+.container{padding:18px}.welcome{margin-bottom:20px}.welcome h2{font-size:25px;margin-bottom:6px}.welcome p{color:#666}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:25px}
+.stat-card{background:#fff;padding:18px;border-radius:13px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.stat-icon{font-size:27px}.stat-title{color:#666;margin-top:8px;font-size:14px}.stat-number{font-size:28px;font-weight:bold;margin-top:5px}
+.section-title{font-size:20px;margin-bottom:12px;margin-top:10px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:25px}
+.action-btn{background:#fff;border:none;padding:17px 8px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:15px}
+.action-icon{display:block;font-size:27px;margin-bottom:7px}
+.duty-card,.task-card,.staff-card{background:#fff;padding:16px;border-radius:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.duty-name,.task-name,.staff-name{font-size:18px;font-weight:bold}.info{margin-top:7px;color:#555;font-size:14px}
+.task-description{margin-top:8px;color:#555;line-height:1.5}
+.badge{display:inline-block;margin-top:10px;padding:5px 10px;border-radius:15px;font-size:12px}
+.status-pending{background:#eee;color:#555}.status-running{background:#fff3cd;color:#856404}
+.status-done{background:#d4edda;color:#155724}.status-cancelled{background:#f8d7da;color:#721c24}
+.priority-high{background:#f8d7da;color:#721c24}.priority-medium{background:#fff3cd;color:#856404}.priority-low{background:#d1ecf1;color:#0c5460}
+.card-buttons{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.edit-btn{background:#1f4e78;color:#fff;border:none;padding:8px 12px;border-radius:6px}
+.delete-btn{background:#dc3545;color:#fff;border:none;padding:8px 12px;border-radius:6px}
+.deadline-today,.deadline-overdue,.deadline-normal{padding:7px 10px;border-radius:7px;margin-top:8px;font-weight:bold}
+.deadline-today{background:#fff3cd;color:#856404}.deadline-overdue{background:#f8d7da;color:#721c24}.deadline-normal{background:#d4edda;color:#155724}
+.empty{background:#fff;padding:20px;text-align:center;color:#777;border-radius:12px;margin-bottom:15px}
+.modal{display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);padding:20px;z-index:1000;overflow-y:auto}
+.modal-box{background:#fff;margin-top:20px;padding:20px;border-radius:15px}.modal-box h2{margin-bottom:18px}
+.input-group{margin-bottom:15px}.input-group label{display:block;margin-bottom:6px;font-size:14px;font-weight:bold}
+.input-group input,.input-group textarea,.input-group select{width:100%;padding:12px;border:1px solid #ccc;border-radius:7px;font-size:15px;background:#fff}
+.save-btn{width:100%;padding:13px;background:#1f4e78;color:#fff;border:none;border-radius:7px;font-size:16px}
+.close-btn{width:100%;padding:11px;background:#eee;border:none;border-radius:7px;font-size:15px;margin-top:8px}
+.staff-info{color:#666;margin-top:6px;font-size:14px}
+.search-box{background:#fff;padding:12px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.search-box input,.search-box select{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:15px;margin-bottom:8px}
+.search-box select{margin-bottom:0}
+.task-filters{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;padding-bottom:5px}
+.task-filters button{border:none;background:#fff;padding:9px 13px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,.08);white-space:nowrap;font-size:13px}
+.task-filters button.active{background:#1f4e78;color:#fff;font-weight:bold}
+
+/* =========================
+   BACKUP & RESTORE
+========================= */
+.backup-panel {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.backup-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+.backup-btn {
+    border: none;
+    padding: 12px 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+}
+.backup-btn.export {
+    background: #1f4e78;
+    color: white;
+}
+.backup-btn.import {
+    background: #198754;
+    color: white;
+}
+.backup-btn.danger {
+    background: #dc3545;
+    color: white;
+}
+.backup-note {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.5;
+}
+@media (max-width: 480px) {
+    .backup-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================
+   FINAL MOBILE UI POLISH
+========================= */
+html { -webkit-text-size-adjust: 100%; }
+body { min-width: 320px; overflow-x: hidden; }
+button, input, textarea, select { font: inherit; }
+button { min-height: 42px; touch-action: manipulation; }
+.action-btn, .edit-btn, .delete-btn, .save-btn, .close-btn { cursor: pointer; }
+.action-btn:active, .edit-btn:active, .delete-btn:active,
+.save-btn:active, .close-btn:active, .task-filters button:active {
+    transform: scale(.98);
+}
+.card-buttons { align-items: stretch; }
+.card-buttons button { min-height: 40px; }
+.modal { -webkit-overflow-scrolling: touch; }
+.modal-box { max-width: 680px; margin-left: auto; margin-right: auto; }
+@media (max-width: 600px) {
+    .header { padding: 14px 15px; gap: 11px; position: sticky; top: 0; z-index: 900; }
+    .header-title { font-size: 19px; }
+    .menu { font-size: 25px; }
+    .container { padding: 12px; }
+    .welcome h2 { font-size: 22px; }
+    .stats { gap: 8px; margin-bottom: 18px; }
+    .stat-card { padding: 13px; border-radius: 11px; }
+    .stat-icon { font-size: 23px; }
+    .stat-title { font-size: 13px; }
+    .stat-number { font-size: 24px; }
+    .actions { gap: 8px; margin-bottom: 18px; }
+    .action-btn { padding: 13px 6px; font-size: 14px; }
+    .action-icon { font-size: 23px; }
+    .section-title { font-size: 18px; margin-top: 8px; }
+    .duty-card, .task-card, .staff-card { padding: 13px; border-radius: 11px; }
+    .duty-name, .task-name, .staff-name { font-size: 16px; }
+    .card-buttons { gap: 6px; }
+    .card-buttons button { flex: 1 1 auto; padding: 9px 8px; }
+    .search-box { padding: 9px; margin-bottom: 14px; }
+    .search-box input, .search-box select { padding: 11px; }
+    .modal { padding: 10px; }
+    .modal-box { margin-top: 8px; padding: 15px; border-radius: 12px; }
+    .modal-box h2 { font-size: 20px; }
+    .input-group { margin-bottom: 12px; }
+    .input-group input, .input-group textarea, .input-group select { padding: 11px; }
+}
+@media (max-width: 380px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .actions { grid-template-columns: 1fr; }
+    .card-buttons button { flex-basis: 100%; }
+}
+
+
+.dashboard-clickable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,box-shadow .12s ease}
+.dashboard-clickable:active{transform:scale(.98)}
+.dashboard-list-modal .modal-box{max-height:90vh;overflow-y:auto}
+.dashboard-list-note{color:#666;margin:-8px 0 14px;font-size:14px}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f4e78">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<div class="header"><div class="menu">☰</div><div class="header-title">Staff Work Manager <span style="font-size:10px;opacity:.8;margin-left:4px">v1.0</span></div></div>
+
+<div class="container">
+<div class="welcome"><h2>Dashboard</h2><p>অফিসের কর্মবণ্টন ও দায়িত্ব ব্যবস্থাপনা</p></div>
+
+<div class="stats">
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('staff')" role="button" tabindex="0"><div class="stat-icon">👥</div><div class="stat-title">মোট কর্মচারী</div><div class="stat-number" id="staffCount">0</div></div>
+
+<!-- =========================
+     DASHBOARD PRIORITY ALERTS
+========================= -->
+<div class="priority-panel">
+    <div class="priority-panel-title">🚨 এখন নজর দেওয়ার মতো কাজ</div>
+    <div id="priorityAlerts">
+        <div class="empty">কোনো জরুরি কাজ নেই।</div>
+    </div>
+</div>
+
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('duty')" role="button" tabindex="0"><div class="stat-icon">🔵</div><div class="stat-title">স্থায়ী দায়িত্ব</div><div class="stat-number" id="dutyCount">0</div></div>
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('task')" role="button" tabindex="0"><div class="stat-icon">🟠</div><div class="stat-title">অস্থায়ী কাজ</div><div class="stat-number" id="taskCount">0</div></div>
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('running')" role="button" tabindex="0"><div class="stat-icon">🔄</div><div class="stat-title">চলমান কাজ</div><div class="stat-number" id="runningCount">0</div></div>
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('pending')" role="button" tabindex="0"><div class="stat-icon">⏳</div><div class="stat-title">অপেক্ষমাণ কাজ</div><div class="stat-number" id="pendingCount">0</div></div>
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('overdue')" role="button" tabindex="0"><div class="stat-icon">⚠️</div><div class="stat-title">Deadline পার হয়েছে</div><div class="stat-number" id="overdueCount">0</div></div>
+<div class="stat-card dashboard-clickable" onclick="showDashboardList('cancelled')" role="button" tabindex="0"><div class="stat-icon">❌</div><div class="stat-title">বাতিল কাজ</div><div class="stat-number" id="cancelledCount">0</div></div>
+</div>
+
+<div class="section-title">দ্রুত কার্যক্রম</div>
+<div class="actions">
+<button class="action-btn" onclick="openDutyForm()"><span class="action-icon">🔵</span>স্থায়ী দায়িত্ব যোগ করুন</button>
+<button class="action-btn" onclick="openTaskForm()"><span class="action-icon">🟠</span>অস্থায়ী কাজ যোগ করুন</button>
+<button class="action-btn" onclick="openStaffForm()"><span class="action-icon">👤</span>কর্মচারী যোগ করুন</button>
+<button class="action-btn" onclick="openReport()"><span class="action-icon">📊</span>রিপোর্ট</button>
+</div>
+
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="🔎 কর্মচারী, দায়িত্ব বা কাজ খুঁজুন..." oninput="searchAll()">
+</div>
+
+<div class="section-title">🔵 স্থায়ী/নিয়মিত দায়িত্ব</div>
+<div id="dutyList"><div class="empty">কোনো স্থায়ী দায়িত্ব নেই।</div></div>
+
+<div class="section-title">🟠 অস্থায়ী/ইন্সট্যান্ট কাজ</div>
+<div class="task-filters">
+<button onclick="filterTasks('all')">📋 সব</button>
+<button onclick="filterTasks('pending')">⏳ অপেক্ষমাণ</button>
+<button onclick="filterTasks('running')">🔄 চলমান</button>
+<button onclick="filterTasks('done')">✅ সম্পন্ন</button>
+<button onclick="filterTasks('overdue')">🔴 Deadline পার</button>
+<button onclick="filterTasks('cancelled')">❌ বাতিল</button>
+</div>
+<div id="taskList"><div class="empty">কোনো অস্থায়ী কাজ নেই।</div></div>
+
+<div class="search-box">
+<input type="text" id="globalSearch" placeholder="🔍 কর্মচারী, দায়িত্ব বা কাজ খুঁজুন..." oninput="runSearch()">
+<select id="searchType" onchange="runSearch()">
+<option value="all">সবকিছু</option><option value="staff">👥 কর্মচারী</option><option value="duty">🔵 স্থায়ী দায়িত্ব</option><option value="task">🟠 অস্থায়ী কাজ</option>
+</select>
+</div>
+
+<div class="section-title">👥 কর্মচারীদের তালিকা</div>
+<div id="staffList"><div class="empty">কোনো কর্মচারী নেই।</div></div>
+</div>
+
+<!-- MODALS -->
+
+<!-- =========================
+     BACKUP & RESTORE
+========================= -->
+
+<div id="finalStatusPanel" class="backup-panel">
+    <div style="font-size:18px;font-weight:bold;margin-bottom:7px;">
+        🛡️ ডাটা নিরাপত্তা
+    </div>
+    <div class="backup-note">
+        নিয়মিত কাজ শেষে <b>💾 Backup নিন</b>। এতে ফোন/ব্রাউজারের
+        LocalStorage সমস্যা হলেও আপনার তথ্য নিরাপদ থাকবে।
+    </div>
+</div>
+
+<div class="section-title">💾 ডাটা Backup & Restore</div>
+
+<div class="backup-panel">
+
+    <div class="backup-note">
+        আপনার কর্মচারী, স্থায়ী দায়িত্ব এবং অস্থায়ী কাজের সব তথ্য
+        একসাথে Backup করে রাখা যাবে। পরে প্রয়োজন হলে Restore করা যাবে।
+    </div>
+
+    <div class="backup-buttons">
+
+        <button class="backup-btn export"
+                onclick="exportBackup()">
+            💾 Backup নিন
+        </button>
+
+        <button class="backup-btn import"
+                onclick="document.getElementById('backupFileInput').click()">
+            ♻️ Backup Restore
+        </button>
+
+        <button class="backup-btn danger"
+                onclick="clearAllAppData()">
+            🗑️ সব ডাটা মুছুন
+        </button>
+
+    </div>
+
+    <input
+        type="file"
+        id="backupFileInput"
+        accept=".json,application/json"
+        style="display:none"
+        onchange="importBackup(event)"
+    >
+
+</div>
+
+<div class="modal" id="dutyModal"><div class="modal-box">
+<h2>🔵 স্থায়ী দায়িত্ব যোগ করুন</h2>
+<div class="input-group"><label>দায়িত্বের নাম</label><input type="text" id="dutyName" placeholder="যেমন: ডাক গ্রহণ ও বিতরণ"></div>
+<div class="input-group"><label>দায়িত্বপ্রাপ্ত কর্মচারী</label><select id="dutyStaff"><option value="">-- কর্মচারী নির্বাচন করুন --</option></select></div>
+<button class="save-btn" onclick="saveDuty()">💾 দায়িত্ব সংরক্ষণ করুন</button><button class="close-btn" onclick="closeDutyForm()">বাতিল</button>
+</div></div>
+
+<div class="modal" id="taskModal"><div class="modal-box">
+<h2>🟠 নতুন অস্থায়ী কাজ</h2>
+<div class="input-group"><label>কাজের নাম *</label><input type="text" id="taskName" placeholder="যেমন: সভার নথি প্রস্তুত"></div>
+<div class="input-group"><label>কাজের বিস্তারিত</label><textarea id="taskDescription" rows="3" placeholder="কাজটি কীভাবে করতে হবে লিখুন"></textarea></div>
+<div class="input-group"><label>দায়িত্বপ্রাপ্ত কর্মচারী *</label><select id="taskStaff"><option value="">-- কর্মচারী নির্বাচন করুন --</option></select></div>
+<div class="input-group"><label>Deadline *</label><input type="date" id="taskDeadline"></div>
+<div class="input-group"><label>অগ্রাধিকার</label><select id="taskPriority"><option value="high">🔴 উচ্চ</option><option value="medium" selected>🟡 মধ্যম</option><option value="low">🟢 নিম্ন</option></select></div>
+<div class="input-group"><label>Status</label><select id="taskStatus"><option value="pending">অপেক্ষমাণ</option><option value="running" selected>চলমান</option><option value="done">সম্পন্ন</option><option value="cancelled">বাতিল</option></select></div>
+<button class="save-btn" onclick="saveTask()">💾 অস্থায়ী কাজ সংরক্ষণ করুন</button><button class="close-btn" onclick="closeTaskForm()">বাতিল</button>
+</div></div>
+
+<div class="modal" id="staffModal"><div class="modal-box">
+<h2>👤 নতুন কর্মচারী</h2>
+<div class="input-group"><label>কর্মচারীর নাম</label><input type="text" id="staffName" placeholder="নাম লিখুন"></div>
+<div class="input-group"><label>পদবি</label><input type="text" id="staffDesignation" placeholder="যেমন: অফিস সহকারী"></div>
+<div class="input-group"><label>শাখা</label><input type="text" id="staffBranch" placeholder="যেমন: প্রশাসন শাখা"></div>
+<div class="input-group"><label>মোবাইল নম্বর</label><input type="tel" id="staffMobile" placeholder="01XXXXXXXXX"></div>
+<button class="save-btn" onclick="saveStaff()">💾 সংরক্ষণ করুন</button><button class="close-btn" onclick="closeStaffForm()">বাতিল</button>
+</div></div>
+
+<script>
+/* =========================================================
+   IMPORTANT:
+   এই কোড আগের localStorage DATA মুছে না।
+   staffData, permanentDuties, temporaryTasks একই key ব্যবহার করছে।
+========================================================= */
+
+function readData(key, fallback){
+    try{
+        const raw = localStorage.getItem(key);
+        if(raw === null) return fallback;
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : fallback;
+    }catch(e){
+        console.error("Data read error:", key, e);
+        return fallback;
+    }
+}
+
+let staff = readData("staffData", [{
+    id: 1,
+    name: "রফিকুল ইসলাম",
+    designation: "গবেষণা কর্মকর্তা",
+    branch: "পরিকল্পনা ও উন্নয়ন",
+    mobile: "01711873708"
+}]);
+
+let duties = readData("permanentDuties", [{
+    id: 1,
+    name: "রুম টু রিদ বাংলাদেশ",
+    staffId: 1,
+    staffName: "রফিকুল ইসলাম"
+}]);
+
+let tasks = readData("temporaryTasks", [{
+    id: 1,
+    name: "পিআইসি সভার কার্য বিবরণী",
+    description: "ফরম্যাট অনুযায়ী কার্যবিবরণী তৈরি করতে হবে",
+    staffId: 1,
+    staffName: "রফিকুল ইসলাম",
+    deadline: "2026-08-15",
+    priority: "medium",
+    status: "running",
+    createdAt: "2026-08-11T00:00:00.000Z"
+}]);
+
+function saveAllData(){
+    localStorage.setItem("staffData", JSON.stringify(staff));
+    localStorage.setItem("permanentDuties", JSON.stringify(duties));
+    localStorage.setItem("temporaryTasks", JSON.stringify(tasks));
+}
+
+
+function normalizeStoredData() {
+
+    staff = Array.isArray(staff) ? staff : [];
+    duties = Array.isArray(duties) ? duties : [];
+    tasks = Array.isArray(tasks) ? tasks : [];
+
+    tasks.forEach(function(task) {
+
+        if (!task.name && task.title) {
+            task.name = task.title;
+        }
+
+        if (!task.title && task.name) {
+            task.title = task.name;
+        }
+
+        if (!task.status) {
+            task.status = "pending";
+        }
+
+        if (!task.priority) {
+            task.priority = "medium";
+        }
+    });
+
+    localStorage.setItem(
+        "staffData",
+        JSON.stringify(staff)
+    );
+
+    localStorage.setItem(
+        "permanentDuties",
+        JSON.stringify(duties)
+    );
+
+    localStorage.setItem(
+        "temporaryTasks",
+        JSON.stringify(tasks)
+    );
+}
+
+normalizeStoredData();
+
+
+function openStaffForm(){ document.getElementById("staffModal").style.display="block"; }
+function closeStaffForm(){ document.getElementById("staffModal").style.display="none"; }
+
+function saveStaff(){
+    const name=document.getElementById("staffName").value.trim();
+    if(!name){alert("কর্মচারীর নাম লিখুন।");return;}
+
+    staff.push({
+        id:Date.now(),
+        name,
+        designation:document.getElementById("staffDesignation").value.trim(),
+        branch:document.getElementById("staffBranch").value.trim(),
+        mobile:document.getElementById("staffMobile").value.trim()
+    });
+
+    saveAllData();
+    document.getElementById("staffName").value="";
+    document.getElementById("staffDesignation").value="";
+    document.getElementById("staffBranch").value="";
+    document.getElementById("staffMobile").value="";
+    closeStaffForm();
+    displayStaff();
+    loadStaffDropdowns();
+    updateDashboard();
+}
+
+function loadStaffDropdowns(){
+    const duty=document.getElementById("dutyStaff");
+    const task=document.getElementById("taskStaff");
+    duty.innerHTML='<option value="">-- কর্মচারী নির্বাচন করুন --</option>';
+    task.innerHTML='<option value="">-- কর্মচারী নির্বাচন করুন --</option>';
+
+    staff.forEach(person=>{
+        const text=person.name+" - "+(person.designation||"");
+        duty.add(new Option(text,String(person.id)));
+        task.add(new Option(text,String(person.id)));
+    });
+}
+
+function openDutyForm(){
+    if(staff.length===0){alert("আগে অন্তত একজন কর্মচারী যোগ করুন।");return;}
+    loadStaffDropdowns();
+    document.getElementById("dutyModal").style.display="block";
+}
+function closeDutyForm(){document.getElementById("dutyModal").style.display="none";}
+
+function saveDuty(){
+    const name=document.getElementById("dutyName").value.trim();
+    const staffId=document.getElementById("dutyStaff").value;
+    if(!name){alert("দায়িত্বের নাম লিখুন।");return;}
+    if(!staffId){alert("দায়িত্বপ্রাপ্ত কর্মচারী নির্বাচন করুন।");return;}
+
+    const selected=staff.find(p=>String(p.id)===String(staffId));
+    if(!selected){alert("কর্মচারী পাওয়া যায়নি।");return;}
+
+    duties.push({
+        id:Date.now(),name,
+        staffId:selected.id,
+        staffName:selected.name
+    });
+    saveAllData();
+    document.getElementById("dutyName").value="";
+    document.getElementById("dutyStaff").value="";
+    closeDutyForm();
+    displayDuties();
+    updateDashboard();
+}
+
+function displayDuties(data=duties){
+    const list=document.getElementById("dutyList");
+    if(!data.length){
+        list.innerHTML='<div class="empty">কোনো স্থায়ী দায়িত্ব নেই।</div>';
+        return;
+    }
+    list.innerHTML="";
+    data.forEach(duty=>{
+        const card=document.createElement("div");
+        card.className="duty-card";
+        card.innerHTML=`
+            <div class="duty-name">📋 ${escapeHTML(duty.name)}</div>
+            <div class="info">👤 দায়িত্বপ্রাপ্ত: <b>${escapeHTML(duty.staffName||getStaffName(duty.staffId))}</b></div>
+            <div class="card-buttons">
+                <button class="delete-btn" onclick="deleteDuty(${duty.id})">🗑️ মুছে ফেলুন</button>
+            </div>`;
+        list.appendChild(card);
+    });
+}
+
+function deleteDuty(id){
+    if(!confirm("এই স্থায়ী দায়িত্বটি মুছে ফেলতে চান?"))return;
+    duties=duties.filter(d=>String(d.id)!==String(id));
+    saveAllData();displayDuties();updateDashboard();
+}
+
+function openTaskForm(){
+    if(!staff.length){alert("অস্থায়ী কাজ দেওয়ার আগে অন্তত একজন কর্মচারী যোগ করুন।");return;}
+    loadStaffDropdowns();
+    document.getElementById("taskModal").style.display="block";
+}
+function closeTaskForm(){document.getElementById("taskModal").style.display="none";}
+
+function saveTask(){
+    const name=document.getElementById("taskName").value.trim();
+    const description=document.getElementById("taskDescription").value.trim();
+    const staffId=document.getElementById("taskStaff").value;
+    const deadline=document.getElementById("taskDeadline").value;
+    const priority=document.getElementById("taskPriority").value;
+    const status=document.getElementById("taskStatus").value;
+
+    if(!name){alert("কাজের নাম লিখুন।");return;}
+    if(!staffId){alert("দায়িত্বপ্রাপ্ত কর্মচারী নির্বাচন করুন।");return;}
+    if(!deadline){alert("Deadline নির্বাচন করুন।");return;}
+
+    const selected=staff.find(p=>String(p.id)===String(staffId));
+    if(!selected){alert("নির্বাচিত কর্মচারী পাওয়া যায়নি।");return;}
+
+    tasks.push({
+        id:Date.now(),
+        name,
+        description,
+        staffId:selected.id,
+        staffName:selected.name,
+        deadline,
+        priority,
+        status,
+        createdAt:new Date().toISOString()
+    });
+
+    saveAllData();
+    clearTaskForm();
+    closeTaskForm();
+    displayTasks();
+    updateDashboard();
+    alert("অস্থায়ী কাজ সফলভাবে সংরক্ষণ হয়েছে।");
+}
+
+function clearTaskForm(){
+    document.getElementById("taskName").value="";
+    document.getElementById("taskDescription").value="";
+    document.getElementById("taskStaff").value="";
+    document.getElementById("taskDeadline").value="";
+    document.getElementById("taskPriority").value="medium";
+    document.getElementById("taskStatus").value="running";
+}
+
+function getToday(){
+    const d=new Date();
+    d.setHours(0,0,0,0);
+    return d;
+}
+function isOverdue(task){
+    if(task.status==="done"||task.status==="cancelled")return false;
+    const d=new Date(task.deadline+"T00:00:00");
+    return d<getToday();
+}
+function formatDate(s){
+    if(!s)return "";
+    const p=s.split("-");
+    return p.length===3 ? p[2]+"-"+p[1]+"-"+p[0] : s;
+}
+function getStaffName(id){
+    const p=staff.find(x=>String(x.id)===String(id));
+    return p ? p.name : "অজানা";
+}
+function escapeHTML(value){
+    return String(value??"")
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+function taskCard(task){
+    let priorityText=task.priority==="high"?"🔴 উচ্চ":task.priority==="medium"?"🟡 মধ্যম":"🟢 নিম্ন";
+    let priorityClass="priority-"+(task.priority||"medium");
+    let statusText={
+        pending:"⏳ অপেক্ষমাণ",
+        running:"🔄 চলমান",
+        done:"✅ সম্পন্ন",
+        cancelled:"❌ বাতিল"
+    }[task.status]||"❓ অজানা";
+    let statusClass="status-"+(task.status||"pending");
+
+    let deadlineText="",deadlineClass="";
+    if(task.status==="done"){
+        deadlineText="✅ কাজটি সম্পন্ন হয়েছে";deadlineClass="deadline-normal";
+    }else if(task.status==="cancelled"){
+        deadlineText="❌ কাজটি বাতিল হয়েছে";deadlineClass="deadline-normal";
+    }else if(isOverdue(task)){
+        deadlineText="🔴 Deadline পার হয়ে গেছে";deadlineClass="deadline-overdue";
+    }else{
+        const d=new Date(task.deadline+"T00:00:00"),today=getToday();
+        if(d.getTime()===today.getTime()){
+            deadlineText="🟠 আজ Deadline";deadlineClass="deadline-today";
+        }else{
+            deadlineText="🟢 Deadline ঠিক আছে";deadlineClass="deadline-normal";
+        }
+    }
+
+    return `
+    <div class="task-card">
+        <div class="task-name">🟠 ${escapeHTML(task.name||task.title||"নাম নেই")}</div>
+        ${task.description?`<div class="task-description">${escapeHTML(task.description)}</div>`:""}
+        <div class="info">👤 দায়িত্বপ্রাপ্ত: <b>${escapeHTML(task.staffName||getStaffName(task.staffId))}</b></div>
+        <div class="info">📅 Deadline: <b>${formatDate(task.deadline)}</b></div>
+        <div class="${deadlineClass}">${deadlineText}</div>
+        <span class="badge ${priorityClass}">${priorityText}</span>
+        <span class="badge ${statusClass}">${statusText}</span>
+        <div class="card-buttons">
+            <button class="edit-btn" onclick="changeTaskStatus(${task.id})">🔄 Status পরিবর্তন</button>
+            <button class="delete-btn" onclick="deleteTask(${task.id})">🗑️ মুছে ফেলুন</button>
+        </div>
+    </div>`;
+}
+
+function displayTasks(data=tasks){
+    const list=document.getElementById("taskList");
+    if(!data.length){
+        list.innerHTML='<div class="empty">কোনো অস্থায়ী কাজ নেই।</div>';
+        return;
+    }
+    list.innerHTML=data.map(taskCard).join("");
+}
+
+function displayFilteredTasks(data){displayTasks(data);}
+
+function filterTasks(filter) {
+
+    document.querySelectorAll(".task-filters button")
+        .forEach(function(button) {
+            button.classList.remove("active");
+        });
+
+    let buttons = document.querySelectorAll(".task-filters button");
+
+    const buttonMap = {
+        all: 0,
+        pending: 1,
+        running: 2,
+        done: 3,
+        overdue: 4,
+        cancelled: 5
+    };
+
+    if (buttonMap[filter] !== undefined &&
+        buttons[buttonMap[filter]]) {
+        buttons[buttonMap[filter]].classList.add("active");
+    }
+
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let filteredTasks = [];
+
+    if (filter === "all") {
+
+        filteredTasks = tasks;
+
+    } else if (filter === "pending") {
+
+        filteredTasks = tasks.filter(function(task) {
+            return task.status === "pending";
+        });
+
+    } else if (filter === "running") {
+
+        filteredTasks = tasks.filter(function(task) {
+            return task.status === "running";
+        });
+
+    } else if (filter === "done") {
+
+        filteredTasks = tasks.filter(function(task) {
+            return task.status === "done";
+        });
+
+    } else if (filter === "cancelled") {
+
+        filteredTasks = tasks.filter(function(task) {
+            return task.status === "cancelled";
+        });
+
+    } else if (filter === "overdue") {
+
+        filteredTasks = tasks.filter(function(task) {
+
+            if (task.status === "done" ||
+                task.status === "cancelled") {
+                return false;
+            }
+
+            let deadline = new Date(task.deadline);
+            deadline.setHours(0, 0, 0, 0);
+
+            return deadline < today;
+        });
+    }
+
+    displayFilteredTasks(filteredTasks);
+}
+
+function changeTaskStatus(id){
+    const task=tasks.find(t=>String(t.id)===String(id));
+    if(!task){alert("কাজটি পাওয়া যায়নি।");return;}
+
+    const newStatus=prompt(
+        "নতুন Status লিখুন:\n\npending = অপেক্ষমাণ\nrunning = চলমান\ndone = সম্পন্ন\ncancelled = বাতিল",
+        task.status
+    );
+    if(newStatus===null)return;
+
+    const s=newStatus.trim().toLowerCase();
+    if(!["pending","running","done","cancelled"].includes(s)){
+        alert("সঠিক Status লিখুন: pending / running / done / cancelled");
+        return;
+    }
+    task.status=s;
+    saveAllData();
+    displayTasks();
+    updateDashboard();
+}
+
+function deleteTask(id){
+    if(!confirm("এই অস্থায়ী কাজটি মুছে ফেলতে চান?"))return;
+    tasks=tasks.filter(t=>String(t.id)!==String(id));
+    saveAllData();displayTasks();updateDashboard();
+}
+
+function displayStaff(data=staff){
+    const list=document.getElementById("staffList");
+    if(!data.length){
+        list.innerHTML='<div class="empty">কোনো কর্মচারী নেই।</div>';
+        return;
+    }
+    list.innerHTML="";
+    data.forEach(person=>{
+        const card=document.createElement("div");
+        card.className="staff-card";
+        card.innerHTML=`
+        <div class="staff-name">👤 ${escapeHTML(person.name)}</div>
+        <div class="staff-info">💼 ${escapeHTML(person.designation||"পদবি দেওয়া হয়নি")}</div>
+        <div class="staff-info">🏢 ${escapeHTML(person.branch||"শাখা দেওয়া হয়নি")}</div>
+        <div class="staff-info">📱 ${escapeHTML(person.mobile||"মোবাইল দেওয়া হয়নি")}</div>
+        <div class="card-buttons">
+            <button class="edit-btn" onclick="editStaff(${person.id})">✏️ Edit</button>
+            <button class="delete-btn" onclick="deleteStaff(${person.id})">🗑️ মুছে ফেলুন</button>
+            <button class="edit-btn" onclick="openStaffWork(${person.id})">📋 কাজ দেখুন</button>
+        </div>`;
+        list.appendChild(card);
+    });
+}
+
+function editStaff(id){
+    const person=staff.find(p=>String(p.id)===String(id));
+    if(!person){alert("কর্মচারী পাওয়া যায়নি।");return;}
+
+    const name=prompt("কর্মচারীর নাম:",person.name);
+    if(name===null)return;
+    if(!name.trim()){alert("নাম খালি রাখা যাবে না।");return;}
+    const designation=prompt("পদবি:",person.designation||"");if(designation===null)return;
+    const branch=prompt("শাখা:",person.branch||"");if(branch===null)return;
+    const mobile=prompt("মোবাইল নম্বর:",person.mobile||"");if(mobile===null)return;
+
+    person.name=name.trim();
+    person.designation=designation.trim();
+    person.branch=branch.trim();
+    person.mobile=mobile.trim();
+
+    /* পুরোনো duty/task-এ নামও আপডেট হবে */
+    duties.forEach(d=>{if(String(d.staffId)===String(id))d.staffName=person.name;});
+    tasks.forEach(t=>{if(String(t.staffId)===String(id))t.staffName=person.name;});
+
+    saveAllData();displayStaff();displayDuties();displayTasks();loadStaffDropdowns();updateDashboard();
+    alert("কর্মচারীর তথ্য সফলভাবে আপডেট হয়েছে।");
+}
+
+function deleteStaff(id){
+    const person=staff.find(p=>String(p.id)===String(id));
+    if(!person){alert("কর্মচারী পাওয়া যায়নি।");return;}
+
+    const personDuties=duties.filter(d=>String(d.staffId)===String(id));
+    const personTasks=tasks.filter(t=>String(t.staffId)===String(id));
+
+    const message="কর্মচারী: "+person.name+"\n\n"+
+        "🔵 স্থায়ী দায়িত্ব: "+personDuties.length+" টি\n"+
+        "🟠 অস্থায়ী কাজ: "+personTasks.length+" টি\n\n"+
+        "এই কর্মচারীকে মুছে ফেলতে চান?";
+
+    if(!confirm(message))return;
+
+    /* ইচ্ছাকৃতভাবে শুধু নিশ্চিত করার পরই সংশ্লিষ্ট কাজগুলো মুছে যাবে */
+    duties=duties.filter(d=>String(d.staffId)!==String(id));
+    tasks=tasks.filter(t=>String(t.staffId)!==String(id));
+    staff=staff.filter(p=>String(p.id)!==String(id));
+
+    saveAllData();
+    displayStaff();displayDuties();displayTasks();loadStaffDropdowns();updateDashboard();
+    alert("কর্মচারী মুছে ফেলা হয়েছে।");
+}
+
+function updateDashboard(){
+    document.getElementById("staffCount").innerText=staff.length;
+    document.getElementById("dutyCount").innerText=duties.length;
+    document.getElementById("taskCount").innerText=tasks.length;
+    document.getElementById("pendingCount").innerText=tasks.filter(t=>t.status==="pending").length;
+    document.getElementById("runningCount").innerText=tasks.filter(t=>t.status==="running").length;
+    document.getElementById("cancelledCount").innerText=tasks.filter(t=>t.status==="cancelled").length;
+    document.getElementById("overdueCount").innerText=tasks.filter(isOverdue).length;
+    updatePriorityAlerts();
+}
+
+function searchAll(){
+    const keyword=document.getElementById("searchInput").value.trim().toLowerCase();
+    if(!keyword){
+        displayStaff();displayDuties();displayTasks();return;
+    }
+
+    displayStaff(staff.filter(p=>
+        `${p.name} ${p.designation||""} ${p.branch||""} ${p.mobile||""}`.toLowerCase().includes(keyword)
+    ));
+    displayDuties(duties.filter(d=>
+        `${d.name} ${d.staffName||""}`.toLowerCase().includes(keyword)
+    ));
+    displayTasks(tasks.filter(t=>
+        `${t.name||""} ${t.title||""} ${t.description||""} ${t.staffName||""} ${t.status||""} ${t.priority||""}`.toLowerCase().includes(keyword)
+    ));
+}
+
+function runSearch(){
+    const text=document.getElementById("globalSearch").value.trim().toLowerCase();
+    const type=document.getElementById("searchType").value;
+
+    if(type==="all"||type==="staff")
+        displayStaff(staff.filter(p=>`${p.name} ${p.designation||""} ${p.branch||""} ${p.mobile||""}`.toLowerCase().includes(text)));
+    else displayStaff([]);
+
+    if(type==="all"||type==="duty")
+        displayDuties(duties.filter(d=>`${d.name} ${d.staffName||""}`.toLowerCase().includes(text)));
+    else displayDuties([]);
+
+    if(type==="all"||type==="task")
+        displayTasks(tasks.filter(t=>`${t.name||""} ${t.title||""} ${t.description||""} ${t.staffName||""} ${t.status||""} ${t.priority||""}`.toLowerCase().includes(text)));
+    else displayTasks([]);
+}
+
+function openStaffWork(staffId){
+    const person=staff.find(p=>String(p.id)===String(staffId));
+    if(!person)return;
+
+    const personDuties=duties.filter(d=>String(d.staffId)===String(person.id));
+    const personTasks=tasks.filter(t=>String(t.staffId)===String(person.id));
+    const pending=personTasks.filter(t=>t.status==="pending").length;
+    const running=personTasks.filter(t=>t.status==="running").length;
+    const done=personTasks.filter(t=>t.status==="done").length;
+    const cancelled=personTasks.filter(t=>t.status==="cancelled").length;
+    const overdue=personTasks.filter(isOverdue).length;
+
+    const dutyHTML=personDuties.length
+        ? personDuties.map(d=>`<div class="duty-card">📋 <b>${escapeHTML(d.name)}</b></div>`).join("")
+        : '<div class="empty">কোনো স্থায়ী দায়িত্ব নেই।</div>';
+
+    const taskHTML=personTasks.length
+        ? personTasks.map(taskCard).join("")
+        : '<div class="empty">কোনো অস্থায়ী কাজ নেই।</div>';
+
+    let modal=document.getElementById("staffWorkModal");
+    if(!modal){
+        modal=document.createElement("div");
+        modal.id="staffWorkModal";
+        modal.className="modal";
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML=`
+    <div class="modal-box">
+        <h2>কর্মচারীর কাজের বিবরণ</h2>
+        <div class="staff-card">
+            <div class="staff-name">👤 ${escapeHTML(person.name)}</div>
+            <div class="staff-info">💼 ${escapeHTML(person.designation||"পদবি দেওয়া হয়নি")}</div>
+            <div class="staff-info">🏢 ${escapeHTML(person.branch||"শাখা দেওয়া হয়নি")}</div>
+        </div>
+        <div class="stats">
+            <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-title">অপেক্ষমাণ</div><div class="stat-number">${pending}</div></div>
+            <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-title">স্থায়ী দায়িত্ব</div><div class="stat-number">${personDuties.length}</div></div>
+            <div class="stat-card"><div class="stat-icon">🟠</div><div class="stat-title">অস্থায়ী কাজ</div><div class="stat-number">${personTasks.length}</div></div>
+            <div class="stat-card"><div class="stat-icon">🔄</div><div class="stat-title">চলমান</div><div class="stat-number">${running}</div></div>
+            <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-title">সম্পন্ন</div><div class="stat-number">${done}</div></div>
+            <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-title">বাতিল</div><div class="stat-number">${cancelled}</div></div>
+            <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-title">Deadline পার</div><div class="stat-number">${overdue}</div></div>
+        </div>
+        <h3>🔵 স্থায়ী দায়িত্ব</h3>
+        <div style="margin-top:10px">${dutyHTML}</div>
+        <h3 style="margin-top:20px">🟠 অস্থায়ী কাজ</h3>
+        <div style="margin-top:10px">${taskHTML}</div>
+        <button class="close-btn" onclick="closeStaffWork()">বন্ধ করুন</button>
+    </div>`;
+    modal.style.display="block";
+}
+function closeStaffWork(){
+    const modal=document.getElementById("staffWorkModal");
+    if(modal)modal.style.display="none";
+}
+
+function openReport(){
+    const totalStaff=staff.length,totalDuties=duties.length,totalTasks=tasks.length;
+    const pending=tasks.filter(t=>t.status==="pending").length;
+    const running=tasks.filter(t=>t.status==="running").length;
+    const done=tasks.filter(t=>t.status==="done").length;
+    const cancelled=tasks.filter(t=>t.status==="cancelled").length;
+    const overdue=tasks.filter(isOverdue).length;
+
+    let staffReport="";
+    staff.forEach(person=>{
+        const pd=duties.filter(d=>String(d.staffId)===String(person.id)).length;
+        const pt=tasks.filter(t=>String(t.staffId)===String(person.id));
+        staffReport+=`
+        <div class="staff-card">
+            <div class="staff-name">👤 ${escapeHTML(person.name)}</div>
+            <div class="staff-info">🔵 স্থায়ী দায়িত্ব: <b>${pd}</b></div>
+            <div class="staff-info">🟠 অস্থায়ী কাজ: <b>${pt.length}</b></div>
+            <div class="staff-info">⏳ অপেক্ষমাণ: <b>${pt.filter(t=>t.status==="pending").length}</b></div>
+            <div class="staff-info">🔄 চলমান: <b>${pt.filter(t=>t.status==="running").length}</b></div>
+            <div class="staff-info">✅ সম্পন্ন: <b>${pt.filter(t=>t.status==="done").length}</b></div>
+            <div class="staff-info">❌ বাতিল: <b>${pt.filter(t=>t.status==="cancelled").length}</b></div>
+        </div>`;
+    });
+
+    let modal=document.getElementById("reportModal");
+    if(!modal){
+        modal=document.createElement("div");
+        modal.id="reportModal";
+        modal.className="modal";
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML=`
+    <div class="modal-box">
+        <h2>📊 অফিস কর্মবণ্টন রিপোর্ট</h2>
+        <div class="stats">
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-title">মোট কর্মচারী</div><div class="stat-number">${totalStaff}</div></div>
+            <div class="stat-card"><div class="stat-icon">🔵</div><div class="stat-title">স্থায়ী দায়িত্ব</div><div class="stat-number">${totalDuties}</div></div>
+            <div class="stat-card"><div class="stat-icon">🟠</div><div class="stat-title">অস্থায়ী কাজ</div><div class="stat-number">${totalTasks}</div></div>
+            <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-title">অপেক্ষমাণ</div><div class="stat-number">${pending}</div></div>
+            <div class="stat-card"><div class="stat-icon">🔄</div><div class="stat-title">চলমান</div><div class="stat-number">${running}</div></div>
+            <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-title">সম্পন্ন</div><div class="stat-number">${done}</div></div>
+            <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-title">বাতিল</div><div class="stat-number">${cancelled}</div></div>
+            <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-title">Deadline পার</div><div class="stat-number">${overdue}</div></div>
+        </div>
+        <h3 style="margin-top:20px">👥 কর্মচারীভিত্তিক কাজ</h3>
+        <div style="margin-top:10px">${staffReport||'<div class="empty">কোনো কর্মচারী নেই।</div>'}</div>
+
+        <button
+            class="save-btn"
+            style="margin-top:15px;"
+            onclick="printReport()">
+            🖨️ রিপোর্ট Print / PDF
+        </button>
+
+        <button class="close-btn" onclick="closeReport()">বন্ধ করুন</button>
+    </div>`;
+    modal.style.display="block";
+}
+function printReport() {
+
+    let modal = document.getElementById("reportModal");
+
+    if (!modal) {
+        alert("রিপোর্ট খোলা নেই।");
+        return;
+    }
+
+    let reportBox = modal.querySelector(".modal-box");
+
+    if (!reportBox) {
+        alert("রিপোর্ট পাওয়া যায়নি।");
+        return;
+    }
+
+    // Report-এর HTML নিয়ে আলাদা print window তৈরি করা হচ্ছে।
+    let reportHTML = reportBox.innerHTML;
+
+    // Print/PDF button এবং Close button print-এ যাবে না।
+    reportHTML = reportHTML.replace(
+        /<button[^>]*onclick="printReport\(\)"[^>]*>[\s\S]*?<\/button>/gi,
+        ""
+    );
+
+    reportHTML = reportHTML.replace(
+        /<button[^>]*onclick="closeReport\(\)"[^>]*>[\s\S]*?<\/button>/gi,
+        ""
+    );
+
+    let printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+        alert(
+            "Print window খোলা যায়নি। Browser-এর popup অনুমতি দিন।"
+        );
+        return;
+    }
+
+    printWindow.document.open();
+
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="bn">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+            <title>অফিস কর্মবণ্টন রিপোর্ট</title>
+
+            <style>
+
+                body {
+                    font-family: Arial, "Noto Sans Bengali", sans-serif;
+                    color: #222;
+                    padding: 20px;
+                    background: white;
+                }
+
+                h2 {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+
+                h3 {
+                    margin-top: 20px;
+                }
+
+                .stats {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 10px;
+                    margin-bottom: 20px;
+                }
+
+                .stat-card {
+                    border: 1px solid #ccc;
+                    padding: 12px;
+                    border-radius: 8px;
+                    background: white;
+                }
+
+                .stat-icon {
+                    font-size: 22px;
+                }
+
+                .stat-title {
+                    color: #555;
+                    font-size: 13px;
+                    margin-top: 5px;
+                }
+
+                .stat-number {
+                    font-size: 22px;
+                    font-weight: bold;
+                    margin-top: 4px;
+                }
+
+                .staff-card {
+                    border: 1px solid #ccc;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    page-break-inside: avoid;
+                }
+
+                .staff-name {
+                    font-size: 17px;
+                    font-weight: bold;
+                    margin-bottom: 7px;
+                }
+
+                .staff-info {
+                    margin-top: 5px;
+                }
+
+                .info {
+                    margin-bottom: 8px;
+                }
+
+                .empty {
+                    border: 1px solid #ddd;
+                    padding: 15px;
+                    text-align: center;
+                }
+
+                @media print {
+
+                    body {
+                        padding: 0;
+                    }
+
+                    .stats {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+
+                }
+
+            </style>
+        </head>
+
+        <body>
+            ${reportHTML}
+        
+<div id="releaseFooter" style="text-align:center;padding:18px 10px 25px;color:#777;font-size:12px">Staff Work Manager • Release Version 1.0</div>
+<script>
+// Release 1.0: defensive UI helpers; core application logic remains unchanged.
+window.addEventListener('error', function(){ /* prevent a single UI error from breaking navigation */ });
+</script>
+
+<style>#pwaInstallBtn{display:none;position:fixed;right:14px;bottom:18px;z-index:2000;border:0;border-radius:28px;padding:13px 17px;background:#1f4e78;color:#fff;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25)}#pwaOffline{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:1999;background:#333;color:#fff;padding:10px 14px;border-radius:10px;text-align:center;font-size:13px}</style>
+<button id="pwaInstallBtn">📲 Home Screen-এ ইনস্টল</button><div id="pwaOffline">📴 Offline Mode — অ্যাপটি ইন্টারনেট ছাড়াই চলবে</div>
+<script>
+(function(){
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW registration failed',e);});});
+  }
+  var installBtn=document.getElementById('pwaInstallBtn'), deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;installBtn.style.display='block';});
+  installBtn.addEventListener('click',async function(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none';});
+  window.addEventListener('appinstalled',function(){installBtn.style.display='none';});
+  function offline(){document.getElementById('pwaOffline').style.display=navigator.onLine?'none':'block';}
+  window.addEventListener('online',offline); window.addEventListener('offline',offline); offline();
+})();
+</script>
+</body>
+        </html>
+    `);
+
+    printWindow.document.close();
+
+    // Android Chrome/WebView-তে print dialog ঠিকভাবে আসার জন্য সামান্য delay।
+    setTimeout(function() {
+
+        printWindow.focus();
+
+        printWindow.print();
+
+    }, 700);
+
+}
+
+function closeReport(){
+    const modal=document.getElementById("reportModal");
+    if(modal)modal.style.display="none";
+}
+
+/* START */
+loadStaffDropdowns();
+displayStaff();
+displayDuties();
+displayTasks();
+updateDashboard();
+filterTasks("all");
+
+/* =========================
+   DASHBOARD PRIORITY ALERTS
+========================= */
+
+function updatePriorityAlerts() {
+
+    const container = document.getElementById("priorityAlerts");
+
+    if (!container) {
+        return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const urgent = [];
+
+    tasks.forEach(function(task) {
+
+        if (task.status === "done" || task.status === "cancelled") {
+            return;
+        }
+
+        const deadline = new Date(task.deadline);
+        deadline.setHours(0, 0, 0, 0);
+
+        if (deadline < today) {
+
+            urgent.push({
+                task: task,
+                type: "overdue",
+                order: 1
+            });
+
+        } else if (deadline.getTime() === today.getTime()) {
+
+            urgent.push({
+                task: task,
+                type: "today",
+                order: 2
+            });
+
+        } else if (task.status === "pending") {
+
+            urgent.push({
+                task: task,
+                type: "pending",
+                order: 3
+            });
+
+        }
+
+    });
+
+    urgent.sort(function(a, b) {
+        return a.order - b.order;
+    });
+
+    if (urgent.length === 0) {
+
+        container.innerHTML =
+            '<div class="empty">✅ কোনো জরুরি কাজ নেই।</div>';
+
+        return;
+    }
+
+    container.innerHTML = "";
+
+    urgent.forEach(function(item) {
+
+        const task = item.task;
+
+        let icon = "";
+        let label = "";
+
+        if (item.type === "overdue") {
+            icon = "🔴";
+            label = "Deadline পার হয়ে গেছে";
+        } else if (item.type === "today") {
+            icon = "🟠";
+            label = "আজ Deadline";
+        } else {
+            icon = "⏳";
+            label = "অপেক্ষমাণ";
+        }
+
+        const card = document.createElement("div");
+
+        card.className = "priority-alert " + item.type;
+
+        card.innerHTML = `
+            <div class="priority-alert-title">
+                ${icon} ${task.name || task.title || "নামহীন কাজ"}
+            </div>
+
+            <div class="priority-alert-info">
+                👤 দায়িত্বপ্রাপ্ত:
+                <b>${task.staffName || "নির্ধারিত নয়"}</b>
+            </div>
+
+            <div class="priority-alert-info">
+                📅 Deadline:
+                <b>${formatDate(task.deadline)}</b>
+            </div>
+
+            <div class="priority-alert-info">
+                📌 অবস্থা:
+                <b>${label}</b>
+            </div>
+
+            <div class="priority-alert-buttons">
+                <button
+                    class="priority-status-btn"
+                    onclick="changeTaskStatus(${task.id})">
+                    🔄 Status পরিবর্তন
+                </button>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+
+
+/* =========================
+   BACKUP & RESTORE
+========================= */
+
+function exportBackup() {
+
+    const backupData = {
+        appName: "Staff Work Manager",
+        backupVersion: 1,
+        backupDate: new Date().toISOString(),
+
+        staff: staff,
+        duties: duties,
+        tasks: tasks
+    };
+
+    const json = JSON.stringify(backupData, null, 2);
+
+    const blob = new Blob(
+        [json],
+        { type: "application/json;charset=utf-8" }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    const now = new Date();
+
+    const date =
+        now.getFullYear() + "-" +
+        String(now.getMonth() + 1).padStart(2, "0") + "-" +
+        String(now.getDate()).padStart(2, "0");
+
+    link.href = url;
+    link.download = "Staff_Work_Manager_Backup_" + date + ".json";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    alert("✅ Backup সফলভাবে নেওয়া হয়েছে।");
+}
+
+
+function importBackup(event) {
+
+    const file =
+        event.target.files && event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+
+        try {
+
+            const backup =
+                JSON.parse(e.target.result);
+
+            if (!backup ||
+                !Array.isArray(backup.staff) ||
+                !Array.isArray(backup.duties) ||
+                !Array.isArray(backup.tasks)) {
+
+                alert(
+                    "❌ এই ফাইলটি Staff Work Manager-এর সঠিক Backup ফাইল নয়।"
+                );
+
+                event.target.value = "";
+                return;
+            }
+
+            const ok = confirm(
+                "⚠️ Restore করলে বর্তমান ডাটা Backup ফাইলের ডাটা দিয়ে প্রতিস্থাপিত হবে।\n\n" +
+                "কর্মচারী: " + backup.staff.length + " জন\n" +
+                "স্থায়ী দায়িত্ব: " + backup.duties.length + " টি\n" +
+                "অস্থায়ী কাজ: " + backup.tasks.length + " টি\n\n" +
+                "আপনি কি Restore করতে চান?"
+            );
+
+            if (!ok) {
+                event.target.value = "";
+                return;
+            }
+
+            staff = backup.staff;
+            duties = backup.duties;
+            tasks = backup.tasks;
+
+            localStorage.setItem(
+                "staffData",
+                JSON.stringify(staff)
+            );
+
+            localStorage.setItem(
+                "permanentDuties",
+                JSON.stringify(duties)
+            );
+
+            localStorage.setItem(
+                "temporaryTasks",
+                JSON.stringify(tasks)
+            );
+
+            displayStaff();
+            displayDuties();
+            displayTasks();
+            loadStaffDropdowns();
+            updateDashboard();
+
+            if (typeof updatePriorityAlerts === "function") {
+                updatePriorityAlerts();
+            }
+
+            alert("✅ Backup সফলভাবে Restore হয়েছে।");
+
+        } catch (error) {
+
+            alert(
+                "❌ Backup ফাইল পড়তে সমস্যা হয়েছে।\n\n" +
+                "সঠিক JSON Backup ফাইল নির্বাচন করুন।"
+            );
+
+        }
+
+        event.target.value = "";
+    };
+
+    reader.readAsText(file);
+}
+
+
+function clearAllAppData() {
+
+    const confirmation =
+        prompt(
+            "⚠️ সতর্কতা!\n\n" +
+            "এই কাজ করলে Staff, স্থায়ী দায়িত্ব এবং অস্থায়ী কাজের " +
+            "সব তথ্য মুছে যাবে।\n\n" +
+            "নিশ্চিত হলে লিখুন: DELETE"
+        );
+
+    if (confirmation !== "DELETE") {
+
+        alert("ডাটা মুছে ফেলা হয়নি।");
+
+        return;
+    }
+
+    localStorage.removeItem("staffData");
+    localStorage.removeItem("permanentDuties");
+    localStorage.removeItem("temporaryTasks");
+
+    staff = [];
+    duties = [];
+    tasks = [];
+
+    displayStaff();
+    displayDuties();
+    displayTasks();
+    loadStaffDropdowns();
+    updateDashboard();
+
+    if (typeof updatePriorityAlerts === "function") {
+        updatePriorityAlerts();
+    }
+
+    alert(
+        "🗑️ সব ডাটা মুছে ফেলা হয়েছে।\n\n" +
+        "Backup থাকলে ♻️ Backup Restore দিয়ে আবার ফিরিয়ে আনতে পারবেন।"
+    );
+}
+
+
+function editDuty(id) {
+
+    let duty = duties.find(function(item) {
+        return String(item.id) === String(id);
+    });
+
+    if (!duty) {
+        alert("দায়িত্ব পাওয়া যায়নি।");
+        return;
+    }
+
+    let newName = prompt(
+        "স্থায়ী দায়িত্বের নাম:",
+        duty.name || ""
+    );
+
+    if (newName === null) {
+        return;
+    }
+
+    newName = newName.trim();
+
+    if (newName === "") {
+        alert("দায়িত্বের নাম খালি রাখা যাবে না।");
+        return;
+    }
+
+    let staffText = staff.map(function(person, index) {
+        return (index + 1) + ". " + person.name;
+    }).join("\n");
+
+    let selected = prompt(
+        "কর্মচারীর নম্বর নির্বাচন করুন:\n\n" + staffText,
+        ""
+    );
+
+    if (selected === null) {
+        return;
+    }
+
+    let index = parseInt(selected, 10) - 1;
+
+    if (isNaN(index) || !staff[index]) {
+        alert("সঠিক কর্মচারী নির্বাচন করুন।");
+        return;
+    }
+
+    duty.name = newName;
+    duty.staffId = staff[index].id;
+    duty.staffName = staff[index].name;
+
+    localStorage.setItem(
+        "permanentDuties",
+        JSON.stringify(duties)
+    );
+
+    displayDuties();
+    updateDashboard();
+
+    alert("✅ স্থায়ী দায়িত্ব আপডেট হয়েছে।");
+}
+
+
+function quickTaskStatus(id, newStatus) {
+
+    let task = tasks.find(function(item) {
+        return String(item.id) === String(id);
+    });
+
+    if (!task) {
+        alert("কাজটি পাওয়া যায়নি।");
+        return;
+    }
+
+    task.status = newStatus;
+
+    localStorage.setItem(
+        "temporaryTasks",
+        JSON.stringify(tasks)
+    );
+
+    displayTasks();
+    updateDashboard();
+
+    if (typeof updatePriorityAlerts === "function") {
+        updatePriorityAlerts();
+    }
+}
+
+
+function setTodayDeadline() {
+
+    let input = document.getElementById("taskDeadline");
+
+    if (!input) return;
+
+    let today = new Date();
+
+    let value =
+        today.getFullYear() + "-" +
+        String(today.getMonth() + 1).padStart(2, "0") + "-" +
+        String(today.getDate()).padStart(2, "0");
+
+    input.value = value;
+}
+
+
+/* =========================
+   FINAL TESTING / DATA INTEGRITY
+========================= */
+(function () {
+    try {
+        if (!Array.isArray(staff)) staff = [];
+        if (!Array.isArray(duties)) duties = [];
+        if (!Array.isArray(tasks)) tasks = [];
+
+        // Keep old task records compatible with the current UI.
+        tasks.forEach(function (task) {
+            if (!task.name && task.title) task.name = task.title;
+            if (!task.status) task.status = "pending";
+            if (!task.priority) task.priority = "medium";
+        });
+
+        // Prevent accidental duplicate active filter state on first load.
+        if (typeof filterTasks === "function") {
+            var filterButtons = document.querySelectorAll(".task-filters button");
+            if (filterButtons.length) filterButtons[0].classList.add("active");
+        }
+    } catch (e) {
+        console.warn("Final integrity check:", e);
+    }
+})();
+
+
+/* =========================
+   REPORT PRINT - FIXED
+========================= */
+function printReport() {
+    var modal = document.getElementById("reportModal");
+
+    if (!modal) {
+        alert("প্রথমে রিপোর্ট খুলুন।");
+        return;
+    }
+
+    var box = modal.querySelector(".modal-box");
+
+    if (!box) {
+        alert("রিপোর্টের তথ্য পাওয়া যায়নি।");
+        return;
+    }
+
+    var reportContent = box.innerHTML;
+
+    var printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+        alert("Print window খোলা যাচ্ছে না।\n\nAcode/Browser-এর popup বা new window অনুমতি চালু করুন।");
+        return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>অফিস কর্মবণ্টন রিপোর্ট</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: Arial, "Noto Sans Bengali", sans-serif;
+        margin: 0;
+        padding: 24px;
+        color: #222;
+        background: white;
+    }
+    h2 { text-align: center; margin: 0 0 20px; }
+    h3 { margin-top: 22px; }
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .stat-card, .staff-card {
+        border: 1px solid #ccc;
+        padding: 12px;
+        border-radius: 8px;
+        page-break-inside: avoid;
+    }
+    .stat-icon { font-size: 22px; }
+    .stat-title { color: #555; margin-top: 4px; }
+    .stat-number { font-size: 24px; font-weight: bold; margin-top: 3px; }
+    .staff-card { margin-bottom: 10px; }
+    .staff-name { font-size: 17px; font-weight: bold; margin-bottom: 7px; }
+    .staff-info { margin: 4px 0; }
+    button { display: none !important; }
+    @media print {
+        body { padding: 10mm; }
+        .stats { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+        .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+</head>
+<body>
+${reportContent}
+<script>
+window.onload = function() {
+    setTimeout(function() {
+        window.print();
+    }, 400);
+};
+<\/script>
+
+<div id="releaseFooter" style="text-align:center;padding:18px 10px 25px;color:#777;font-size:12px">Staff Work Manager • Release Version 1.0</div>
+<script>
+// Release 1.0: defensive UI helpers; core application logic remains unchanged.
+window.addEventListener('error', function(){ /* prevent a single UI error from breaking navigation */ });
+</script>
+</body>
+</html>`);
+    printWindow.document.close();
+}
+
+
+/* =========================
+   FINAL DASHBOARD CARD LIST
+========================= */
+function showDashboardList(type){
+    var title="", list=[], isStaff=false, isDuty=false;
+    if(type==="staff"){title="👥 মোট কর্মচারীর তালিকা";list=staff;isStaff=true;}
+    else if(type==="duty"){title="🔵 স্থায়ী দায়িত্বের তালিকা";list=duties;isDuty=true;}
+    else{
+        title = type==="task"?"🟠 অস্থায়ী কাজের তালিকা":
+                type==="running"?"🔄 চলমান কাজের তালিকা":
+                type==="pending"?"⏳ অপেক্ষমাণ কাজের তালিকা":
+                type==="overdue"?"⚠️ Deadline পার হওয়া কাজের তালিকা":
+                "❌ বাতিল কাজের তালিকা";
+        list=tasks.filter(function(task){
+            if(type==="task") return true;
+            if(type==="running") return task.status==="running";
+            if(type==="pending") return task.status==="pending";
+            if(type==="cancelled") return task.status==="cancelled";
+            if(type==="overdue"){
+                if(task.status==="done"||task.status==="cancelled") return false;
+                var d=new Date(task.deadline); d.setHours(0,0,0,0);
+                var today=new Date(); today.setHours(0,0,0,0);
+                return d<today;
+            }
+            return false;
+        });
+    }
+    var html="";
+    list.forEach(function(x){
+        if(isStaff){
+            html+='<div class="staff-card"><div class="staff-name">👤 '+safeDashboardText(x.name)+'</div>'+
+                  '<div class="staff-info">💼 '+safeDashboardText(x.designation||"পদবি দেওয়া হয়নি")+'</div>'+
+                  '<div class="staff-info">🏢 '+safeDashboardText(x.branch||"শাখা দেওয়া হয়নি")+'</div>'+
+                  '<div class="staff-info">📱 '+safeDashboardText(x.mobile||"মোবাইল দেওয়া হয়নি")+'</div></div>';
+        }else if(isDuty){
+            html+='<div class="duty-card"><div class="duty-name">📋 '+safeDashboardText(x.name)+'</div>'+
+                  '<div class="info">👤 দায়িত্বপ্রাপ্ত: <b>'+safeDashboardText(x.staffName||getDashboardStaffName(x.staffId))+'</b></div></div>';
+        }else{
+            var st=x.status==="pending"?"⏳ অপেক্ষমাণ":x.status==="running"?"🔄 চলমান":x.status==="done"?"✅ সম্পন্ন":x.status==="cancelled"?"❌ বাতিল":"❓ অজানা";
+            html+='<div class="task-card"><div class="task-name">🟠 '+safeDashboardText(x.name||x.title||"নাম নেই")+'</div>'+
+                  (x.description?'<div class="task-description">'+safeDashboardText(x.description)+'</div>':'')+
+                  '<div class="info">👤 দায়িত্বপ্রাপ্ত: <b>'+safeDashboardText(x.staffName||getDashboardStaffName(x.staffId))+'</b></div>'+
+                  '<div class="info">📅 Deadline: <b>'+safeDashboardText(x.deadline?formatDate(x.deadline):"নেই")+'</b></div>'+
+                  '<span class="badge status-'+safeDashboardText(x.status||"pending")+'">'+st+'</span></div>';
+        }
+    });
+    var modal=document.getElementById("dashboardListModal");
+    if(!modal){modal=document.createElement("div");modal.id="dashboardListModal";modal.className="modal dashboard-list-modal";document.body.appendChild(modal);}
+    modal.innerHTML='<div class="modal-box"><h2>'+title+'</h2><div class="dashboard-list-note">মোট: <b>'+list.length+'</b> টি</div>'+
+                    (html||'<div class="empty">এই তালিকায় কোনো তথ্য নেই।</div>')+
+                    '<button class="close-btn" onclick="closeDashboardList()">বন্ধ করুন</button></div>';
+    modal.style.display="block";
+}
+function closeDashboardList(){
+    var modal=document.getElementById("dashboardListModal");
+    if(modal) modal.style.display="none";
+}
+function getDashboardStaffName(id){
+    var p=staff.find(function(x){return String(x.id)===String(id);});
+    return p?p.name:"অজানা";
+}
+function safeDashboardText(v){
+    return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+</script>
+
+<div id="releaseFooter" style="text-align:center;padding:18px 10px 25px;color:#777;font-size:12px">Staff Work Manager • Release Version 1.0</div>
+<script>
+// Release 1.0: defensive UI helpers; core application logic remains unchanged.
+window.addEventListener('error', function(){ /* prevent a single UI error from breaking navigation */ });
+</script>
+</body>
+</html>
